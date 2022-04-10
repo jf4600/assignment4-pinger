@@ -55,9 +55,8 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         if type == 0 and packID == ID:
             bytesDouble = struct.calcsize("d")
             timeSent = struct.unpack("d", recPacket[28:28 + bytesDouble])[0]
-            ttls = struct.unpack("c", recPacket[8:9])[0]
             rtt = timeReceived - timeSent
-            return (rtt, ttls)
+            return rtt
 
 #################################################################################
         # Fill in end
