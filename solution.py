@@ -51,11 +51,13 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         # Fill in start
         # Fetch the ICMP header from the IP packet
         icmpHead = recPacket[20:28]
-        type, code, checksum, recID, sequence = struct.unpack("bbHHh", icmpHead)
-
-        if recID == ID: bytesDouble = struct.calcsize("p")
-        timeSent = struct.unpack("p", recPacket[28:28 + bytesDouble])[0]
-        return timeReceived - timeSent
+        type, code, checksum, packID, seqNo = struct.unpack("bbHHh", icmpHead)
+        if type == 0 and packID == ID:
+            bytesDouble = struct.calcsize("d")
+            timeSent = struct.unpack("d", recPacket[28:28 + bytesDouble])[0]
+            ttls = struct.unpack("c", recPacket[8:9])[0]
+            rtt = timeReceived - timeSent
+            return (rtt, ttls)
 
 #################################################################################
         # Fill in end
@@ -121,9 +123,19 @@ def ping(host, timeout=1):
         delay = doOnePing(dest, timeout)
         print(delay)
         time.sleep(1)  # one second
+        val = []
         
     #You should have the values of delay for each ping here; fill in calculation for packet_min, packet_avg, packet_max, and stdev
-    vars = [str(round(packet_min, 8)), str(round(packet_avg, 8)), str(round(packet_max, 8)),str(round(stdev(stdev_var), 8))]
+    if len(val) > 0:
+        packet_min = min(val) * 1000
+        packet_avg = sum(val) / len(val) * 1000
+        packet_max = max(val) * 1000
+        stdev_var = list(val) * 1000
+        vars = [str(round(packet_min, 2)), str(round(packet_avg, 2)), str(round(packet_max, 2)), str(round(statistics.stdev(stdev_var), 2))]
+    else:
+        vars = ['0', '0.0', '0', '0.0']
+    return vars
+
 
     return vars
 
